@@ -24,14 +24,19 @@ class CustomerFlowIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void createsCustomerWithApprovedKyc() throws Exception {
+    void createsCustomerWithApprovedKycAndProfile() throws Exception {
+        // Distinct email so it does not clash with the seeded customers.
         String body = """
-            {"fullName":"Alice Tan","email":"alice@example.com","nationalId":"S1234567A"}
+            {"fullName":"Eve Ng","email":"eve@example.com","nationalId":"S1112223E",
+             "phone":"+65 9000 0000","city":"Singapore","country":"SG","occupation":"Analyst",
+             "preferredChannel":"MOBILE"}
             """;
         mockMvc.perform(post("/customers").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.kycStatus").value("APPROVED"))
-                .andExpect(jsonPath("$.customerRef").exists());
+                .andExpect(jsonPath("$.customerRef").exists())
+                .andExpect(jsonPath("$.profile.phone").value("+65 9000 0000"))
+                .andExpect(jsonPath("$.profile.occupation").value("Analyst"));
     }
 
     @Test
@@ -47,7 +52,7 @@ class CustomerFlowIntegrationTest {
     @Test
     void retrievesCreatedCustomerByRef() throws Exception {
         String body = """
-            {"fullName":"Bob Lim","email":"bob@example.com"}
+            {"fullName":"Frank Goh","email":"frank@example.com"}
             """;
         String response = mockMvc.perform(post("/customers")
                         .contentType(MediaType.APPLICATION_JSON).content(body))
@@ -58,7 +63,17 @@ class CustomerFlowIntegrationTest {
 
         mockMvc.perform(get("/customers/" + ref))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("bob@example.com"));
+                .andExpect(jsonPath("$.email").value("frank@example.com"));
+    }
+
+    @Test
+    void returnsSeededCustomerProfile() throws Exception {
+        // CUST-ALICE is seeded by V3 with a full profile.
+        mockMvc.perform(get("/customers/CUST-ALICE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("Alice Tan"))
+                .andExpect(jsonPath("$.profile.city").value("Singapore"))
+                .andExpect(jsonPath("$.profile.occupation").value("Software Engineer"));
     }
 
     @Test

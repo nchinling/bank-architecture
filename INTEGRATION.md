@@ -82,6 +82,37 @@ The gateway strips the `/api/v1/<service>` prefix and routes to the service.
 }
 ```
 
+### Customer record shape (`GET /customers/me` and `GET /customers/{ref}`)
+
+The customer record includes an optional nested `profile` object. Profile fields
+may be `null` if not set.
+
+```json
+{
+  "customerRef": "CUST-ALICE",
+  "fullName": "Alice Tan",
+  "email": "alice@example.com",
+  "nationalId": "S1234567A",
+  "kycStatus": "APPROVED",
+  "kycReason": "Seeded customer",
+  "createdAt": "2026-01-01T00:00:00Z",
+  "profile": {
+    "phone": "+65 9123 4567",
+    "addressLine1": "12 Orchard Road",
+    "addressLine2": "#05-01",
+    "city": "Singapore",
+    "postalCode": "238801",
+    "country": "SG",
+    "dateOfBirth": "1995-04-12",
+    "occupation": "Software Engineer",
+    "preferredChannel": "MOBILE"
+  }
+}
+```
+
+When creating a customer (`POST /customers`), the same profile fields are accepted
+as optional top-level properties alongside `fullName`, `email`, and `nationalId`.
+
 ## 5. Response outcomes to handle
 
 Your app should handle each of these explicitly:
@@ -104,10 +135,17 @@ All errors return a consistent JSON body:
 
 ## 6. Seeded data to build against
 
-| Customer | Accounts (opening balance) |
-|----------|----------------------------|
-| CUST-ALICE (alice) | ACC-1001 SAVINGS 5000.00 SGD, ACC-1002 CURRENT 1200.50 SGD |
-| CUST-BOB (bob) | ACC-2001 SAVINGS 8300.75 SGD, ACC-2002 CURRENT 450.00 SGD |
+Customers (all seeded with KYC APPROVED and a full profile):
+
+| Customer | Login | Occupation | Accounts (opening balance) |
+|----------|-------|------------|----------------------------|
+| CUST-ALICE | alice | Software Engineer | ACC-1001 SAVINGS 5000.00 SGD, ACC-1002 CURRENT 1200.50 SGD |
+| CUST-BOB | bob | Teacher | ACC-2001 SAVINGS 8300.75 SGD, ACC-2002 CURRENT 450.00 SGD |
+| CUST-CARA | (no login) | Student | (no seeded accounts yet) |
+| CUST-DAN | (no login) | Business Owner | (no seeded accounts yet) |
+
+Only `alice` and `bob` have Keycloak logins. CUST-CARA and CUST-DAN exist in the
+customer service for richer profile data but have no accounts seeded in v1.
 
 The transaction service also ships seeded historical statement entries.
 

@@ -52,7 +52,7 @@ public class CustomerController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CustomerResponse create(@Valid @RequestBody CreateCustomerRequest request) {
-        Customer customer = service.createCustomer(request.fullName(), request.email(), request.nationalId());
+        Customer customer = service.createCustomer(request);
         return CustomerResponse.from(customer);
     }
 

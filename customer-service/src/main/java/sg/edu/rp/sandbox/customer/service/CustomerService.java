@@ -6,6 +6,7 @@ import sg.edu.rp.sandbox.common.error.BusinessException;
 import sg.edu.rp.sandbox.common.kyc.KycProvider;
 import sg.edu.rp.sandbox.common.kyc.KycRequest;
 import sg.edu.rp.sandbox.common.kyc.KycResult;
+import sg.edu.rp.sandbox.customer.api.CreateCustomerRequest;
 import sg.edu.rp.sandbox.customer.domain.Customer;
 import sg.edu.rp.sandbox.customer.domain.CustomerRepository;
 
@@ -27,17 +28,22 @@ public class CustomerService {
     }
 
     @Transactional
-    public Customer createCustomer(String fullName, String email, String nationalId) {
-        if (repository.existsByEmail(email)) {
+    public Customer createCustomer(CreateCustomerRequest request) {
+        if (repository.existsByEmail(request.email())) {
             throw new BusinessException("EMAIL_IN_USE", "A customer with this email already exists");
         }
 
         // Pluggable KYC: simulated in v1, swappable for a vendor via config.
-        KycResult kyc = kycProvider.verify(new KycRequest(fullName, email, nationalId));
+        KycResult kyc = kycProvider.verify(
+                new KycRequest(request.fullName(), request.email(), request.nationalId()));
 
         Customer customer = new Customer(
-                UUID.randomUUID().toString(), fullName, email, nationalId,
+                UUID.randomUUID().toString(), request.fullName(), request.email(), request.nationalId(),
                 kyc.status(), kyc.reason());
+        customer.setProfile(
+                request.phone(), request.addressLine1(), request.addressLine2(), request.city(),
+                request.postalCode(), request.country(), request.dateOfBirth(),
+                request.occupation(), request.preferredChannel());
         return repository.save(customer);
     }
 
