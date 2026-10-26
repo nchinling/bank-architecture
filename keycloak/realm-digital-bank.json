@@ -1,0 +1,78 @@
+{
+  "realm": "digital-bank",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "customer", "description": "Standard banking customer" },
+      { "name": "admin", "description": "Instructor / administrator" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "sandbox-web",
+      "name": "Sandbox Reference Web App (public SPA client)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:3000/*", "http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:3000", "http://localhost:5173", "+"],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3000/*##http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "customer_ref",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "customer_ref",
+            "claim.name": "customer_ref",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.com",
+      "firstName": "Alice",
+      "lastName": "Tan",
+      "emailVerified": true,
+      "attributes": { "customer_ref": ["CUST-ALICE"] },
+      "credentials": [{ "type": "password", "value": "password", "temporary": false }],
+      "realmRoles": ["customer"]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "email": "bob@example.com",
+      "firstName": "Bob",
+      "lastName": "Lim",
+      "emailVerified": true,
+      "attributes": { "customer_ref": ["CUST-BOB"] },
+      "credentials": [{ "type": "password", "value": "password", "temporary": false }],
+      "realmRoles": ["customer"]
+    },
+    {
+      "username": "instructor",
+      "enabled": true,
+      "email": "instructor@example.com",
+      "firstName": "Instructor",
+      "lastName": "Admin",
+      "emailVerified": true,
+      "attributes": { "customer_ref": ["CUST-ALICE"] },
+      "credentials": [{ "type": "password", "value": "password", "temporary": false }],
+      "realmRoles": ["customer", "admin"]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+# Keep the Docker build context small and reproducible.
+**/target/
+**/node_modules/
+**/.git/
+**/.idea/
+**/*.iml
+**/.vscode/
+keycloak-*/
+*.log
+reference-app/node_modules/

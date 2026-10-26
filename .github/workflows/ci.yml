@@ -1,0 +1,46 @@
+name: CI
+
+# Build and test the whole monorepo on every push and pull request.
+# Tests run against in-memory H2, so no MySQL service is required here.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Temurin) with Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Build and run all tests
+        run: ./mvnw -B -ntp verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: "**/target/surefire-reports/*.xml"
+          if-no-files-found: ignore
+
+  # Stubbed, manual-only deployment path. Wired but inert until container images
+  # and a target environment exist (Task 12). Kept here so the pipeline shape is
+  # ready and visible without doing anything yet.
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: build-and-test
+    steps:
+      - name: Placeholder deploy step
+        run: echo "Deploy is not wired yet. Container images and a target environment arrive in Task 12."

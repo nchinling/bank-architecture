@@ -1,0 +1,108 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Edge JWT validation (reactive). Same issuer as the backend services.
+          issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+          jwk-set-uri: ${SANDBOX_JWKS_URI:${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}/protocol/openid-connect/certs}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Routes to the backend services. The API gateway is the single entry
+          # point; clients call /api/v1/... and the gateway strips the prefix.
+          # Service base URIs default to localhost (native-first) and can be
+          # overridden with env vars when running in containers/Kubernetes.
+          routes:
+            - id: customer-service
+              uri: ${CUSTOMER_URI:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/customers/**
+              filters:
+                - StripPrefix=2
+            - id: account-service
+              uri: ${ACCOUNT_URI:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/accounts/**
+              filters:
+                - StripPrefix=2
+            - id: transaction-service
+              uri: ${TRANSACTION_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/transactions/**
+              filters:
+                - StripPrefix=2
+            - id: payment-service
+              uri: ${PAYMENT_URI:http://localhost:8085}
+              predicates:
+                - Path=/api/v1/payments/**
+              filters:
+                - StripPrefix=2
+
+            # Per-service OpenAPI specs, exposed through the gateway so the
+            # aggregated Swagger UI can load each one from a single origin.
+            - id: customer-docs
+              uri: ${CUSTOMER_URI:http://localhost:8082}
+              predicates:
+                - Path=/v3/api-docs/customer-service
+              filters:
+                - RewritePath=/v3/api-docs/customer-service, /v3/api-docs
+            - id: account-docs
+              uri: ${ACCOUNT_URI:http://localhost:8083}
+              predicates:
+                - Path=/v3/api-docs/account-service
+              filters:
+                - RewritePath=/v3/api-docs/account-service, /v3/api-docs
+            - id: transaction-docs
+              uri: ${TRANSACTION_URI:http://localhost:8084}
+              predicates:
+                - Path=/v3/api-docs/transaction-service
+              filters:
+                - RewritePath=/v3/api-docs/transaction-service, /v3/api-docs
+            - id: payment-docs
+              uri: ${PAYMENT_URI:http://localhost:8085}
+              predicates:
+                - Path=/v3/api-docs/payment-service
+              filters:
+                - RewritePath=/v3/api-docs/payment-service, /v3/api-docs
+
+# Sandbox API keys + rate limiting (self-service access control at the edge).
+# Keys are demo values for the teaching sandbox - override via env/config for real use.
+sandbox:
+  gateway:
+    api-key-header: X-Sandbox-Key
+    api-keys:
+      - demo-key-123
+      - student-key-456
+    rate-limit:
+      requests-per-minute: 60
+
+# Aggregated API docs: one Swagger UI at the gateway listing every service's spec.
+# Open http://localhost:8081/swagger-ui.html and pick a service from the dropdown.
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: customer-service
+        url: /v3/api-docs/customer-service
+      - name: account-service
+        url: /v3/api-docs/account-service
+      - name: transaction-service
+        url: /v3/api-docs/transaction-service
+      - name: payment-service
+        url: /v3/api-docs/payment-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

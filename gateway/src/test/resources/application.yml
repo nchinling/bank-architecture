@@ -1,0 +1,10 @@
+# Test profile: no issuer-uri so the reactive edge-security config stays inactive
+# (the context can start without a live Keycloak). API-key filter is still tested.
+sandbox:
+  gateway:
+    api-key-header: X-Sandbox-Key
+    api-keys:
+      - test-key
+      - rate-test-key
+    rate-limit:
+      requests-per-minute: 3

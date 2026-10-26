@@ -1,0 +1,126 @@
+# One-command startup for the whole sandbox (optional convenience over native-first).
+# Usage:  docker compose up --build
+#
+# Note on issuer-uri: services validate the JWT "iss" claim against the issuer.
+# We pin Keycloak's hostname to "keycloak" and set KC_HOSTNAME_URL so the issuer
+# it advertises matches what the services (and the gateway) validate against.
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: sandbox
+    ports:
+      # Host port 3307 avoids clashing with a native MySQL on 3306.
+      # Services inside the Docker network still connect on 3306 (see DB_PORT).
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psandbox"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: ["start-dev", "--import-realm", "--http-port=8080"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      # Advertise localhost:8080 so the issuer in tokens matches what both the
+      # browser and the services validate against.
+      KC_HOSTNAME_URL: http://localhost:8080
+      KC_HOSTNAME_STRICT: "false"
+    volumes:
+      - ./keycloak/realm-digital-bank.json:/opt/keycloak/data/import/realm-digital-bank.json:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: customer-service/Dockerfile
+    environment: &svc-env
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USERNAME: root
+      DB_PASSWORD: sandbox
+      # Trust the issuer as advertised to clients (localhost), but fetch signing
+      # keys over the Docker network (the keycloak service is not reachable as
+      # "localhost" from inside a service container).
+      SANDBOX_ISSUER_URI: http://localhost:8080/realms/digital-bank
+      SANDBOX_JWKS_URI: http://keycloak:8080/realms/digital-bank/protocol/openid-connect/certs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  account-service:
+    build:
+      context: .
+      dockerfile: account-service/Dockerfile
+    environment:
+      <<: *svc-env
+      DB_NAME: sandbox_account
+    depends_on:
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    environment:
+      <<: *svc-env
+      DB_NAME: sandbox_transaction
+    depends_on:
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    environment:
+      <<: *svc-env
+      DB_NAME: sandbox_payment
+    depends_on:
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8085:8085"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      SANDBOX_ISSUER_URI: http://localhost:8080/realms/digital-bank
+      SANDBOX_JWKS_URI: http://keycloak:8080/realms/digital-bank/protocol/openid-connect/certs
+      CUSTOMER_URI: http://customer-service:8082
+      ACCOUNT_URI: http://account-service:8083
+      TRANSACTION_URI: http://transaction-service:8084
+      PAYMENT_URI: http://payment-service:8085
+    depends_on:
+      - customer-service
+      - account-service
+      - transaction-service
+      - payment-service
+    ports:
+      - "8081:8081"

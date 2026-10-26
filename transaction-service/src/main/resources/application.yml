@@ -1,0 +1,48 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:sandbox_transaction}?createDatabaseIfNotExist=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+          jwk-set-uri: ${SANDBOX_JWKS_URI:${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}/protocol/openid-connect/certs}
+
+provider:
+  identity: keycloak
+
+sandbox:
+  identity:
+    issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+    customer-claim: customer_ref
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

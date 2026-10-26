@@ -1,0 +1,41 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets - never commit real credentials
+.env
+*.local.env
+application-local-secrets.yml
+
+# Keycloak downloaded distribution (kept out of the repo)
+keycloak-*/
+*.zip
+
+# Node (reference app / future Next.js clients)
+node_modules/
+dist/
+.next/
+
+# Build helpers
+*.pid

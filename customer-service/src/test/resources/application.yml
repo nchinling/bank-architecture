@@ -1,0 +1,20 @@
+# Test profile: use in-memory H2 so tests need no running MySQL.
+# H2 runs in MySQL-compatibility mode so Flyway MySQL migrations still apply.
+spring:
+  datasource:
+    url: jdbc:h2:mem:customer;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+provider:
+  kyc: simulated

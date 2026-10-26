@@ -1,0 +1,55 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:sandbox_payment}?createDatabaseIfNotExist=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+          jwk-set-uri: ${SANDBOX_JWKS_URI:${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}/protocol/openid-connect/certs}
+
+# Pluggable adapters
+provider:
+  aml: simulated
+  events: in-process
+  identity: keycloak
+
+sandbox:
+  compliance:
+    aml:
+      flag-threshold: 10000.00
+      review-threshold: 5000.00
+  identity:
+    issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+    customer-claim: customer_ref
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,59 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: customer-service
+  datasource:
+    # MySQL runs natively on :3306. Credentials come from environment variables
+    # (never hardcoded). Each service uses its own schema/database.
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:sandbox_customer}?createDatabaseIfNotExist=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # JWTs are validated against this OIDC issuer (Keycloak by default).
+          issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+          # Where to fetch the signing keys. Defaults to the issuer's JWKS, but can
+          # be pointed at a different reachable host (e.g. the Docker service name)
+          # when the issuer URL is not reachable from inside the container.
+          jwk-set-uri: ${SANDBOX_JWKS_URI:${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}/protocol/openid-connect/certs}
+
+# Pluggable adapters: simulated by default, swappable to a vendor via config.
+provider:
+  kyc: simulated
+  identity: keycloak
+
+sandbox:
+  compliance:
+    kyc:
+      default-status: APPROVED
+  identity:
+    issuer-uri: ${SANDBOX_ISSUER_URI:http://localhost:8080/realms/digital-bank}
+    customer-claim: customer_ref
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

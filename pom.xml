@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.6</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>sg.edu.rp.sandbox</groupId>
+    <artifactId>digital-bank-sandbox</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>RP Digital Bank Sandbox</name>
+    <description>Educational banking digital services sandbox (v1)</description>
+
+    <!--
+      Parent (aggregator) POM for the monorepo.
+      All shared dependency versions, the Java version, and plugin config live here
+      so every module stays consistent. Modules inherit from this POM.
+    -->
+
+    <modules>
+        <module>common</module>
+        <module>compliance-adapters</module>
+        <module>security-adapters</module>
+        <module>events-adapters</module>
+        <module>customer-service</module>
+        <module>account-service</module>
+        <module>transaction-service</module>
+        <module>payment-service</module>
+        <module>gateway</module>
+    </modules>
+
+    <properties>
+        <!-- Java 25 is installed locally and is an LTS release. Spring Boot 3.5.x supports it. -->
+        <java.version>25</java.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Spring Cloud 2025.0.x (Northfields) is compatible with Spring Boot 3.5.x. -->
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
+
+        <!-- API documentation (Swagger UI) -->
+        <springdoc.version>2.8.9</springdoc.version>
+
+        <!-- Database migrations -->
+        <flyway.version>11.7.2</flyway.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- springdoc / Swagger UI for WebMVC services -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <!-- springdoc / Swagger UI for the reactive (WebFlux) gateway -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Internal module: shared DTOs, errors, and adapter interfaces -->
+            <dependency>
+                <groupId>sg.edu.rp.sandbox</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>sg.edu.rp.sandbox</groupId>
+                <artifactId>compliance-adapters</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>sg.edu.rp.sandbox</groupId>
+                <artifactId>security-adapters</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>sg.edu.rp.sandbox</groupId>
+                <artifactId>events-adapters</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,25 @@
+# Shared configuration and credentials for the sandbox services.
+# ConfigMap holds non-secret settings; Secret holds the DB credentials.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sandbox-config
+data:
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  SANDBOX_ISSUER_URI: http://keycloak:8080/realms/digital-bank
+  # Adapter switches are plain config - flip these to swap simulated vs vendor.
+  PROVIDER_IDENTITY: keycloak
+  PROVIDER_KYC: simulated
+  PROVIDER_AML: simulated
+  PROVIDER_EVENTS: in-process
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sandbox-db
+type: Opaque
+stringData:
+  # Demo credentials for the sandbox. Replace for any shared/real deployment.
+  DB_USERNAME: root
+  DB_PASSWORD: sandbox

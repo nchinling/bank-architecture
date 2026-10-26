@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>sg.edu.rp.sandbox</groupId>
+        <artifactId>digital-bank-sandbox</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>common</artifactId>
+    <name>common</name>
+    <description>Shared DTOs, error types, and pluggable adapter interfaces (Identity, KYC, AML, Events)</description>
+
+    <!--
+      This module is a plain library (not a Spring Boot app), so we disable the
+      Spring Boot repackage goal. It holds the adapter CONTRACTS that make the
+      sandbox detachable: swapping a simulated provider for a real vendor means
+      adding a new implementation of these interfaces + a config flag - no
+      changes to the services that depend on them.
+    -->
+
+    <dependencies>
+        <!-- Bean validation annotations for DTOs -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Library module: do not produce an executable fat jar -->
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
